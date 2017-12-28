@@ -16,6 +16,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ChatersActivity" />
+        <activity android:name=".ChaptersActivity" />
+        <activity android:name=".VersesActivity"></activity>
     </application>
 
 </manifest>

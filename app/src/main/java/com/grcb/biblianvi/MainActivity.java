@@ -1,16 +1,16 @@
 package com.grcb.biblianvi;
 
-import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.InputStream;
@@ -21,22 +21,17 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 public class MainActivity extends AppCompatActivity {
     private ListView listView;
-    private NodeList bookList, chapterList;
+    private NodeList bookList;
+    private InputStream inputStream;
     private Document document;
 
-    @SuppressLint("SetTextI18n")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        listView = findViewById(R.id.listViewId);
 
         try {
-            InputStream inputStream = getAssets().open("nvi_min.xml");
-
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            document = dBuilder.parse(inputStream);
+            listView = findViewById(R.id.listViewId);
 
             getListBook();
 
@@ -45,76 +40,65 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void getListBook(){
-
-        Element elementBook = document.getDocumentElement();
-        bookList = elementBook.getElementsByTagName("book");
-        ArrayList arrayBook = new ArrayList();
-
-        for (int i = 0; i < bookList.getLength(); i++) {
-            String book = bookList.item(i).getAttributes().getNamedItem("name").getTextContent();
-            arrayBook.add(book);
+    private Document getDocument() {
+        try {
+            inputStream = getAssets().open("nvi_min.xml");
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            document = dBuilder.parse(inputStream);
+        } catch (Exception e) {
+            showMSG(e.getMessage());
         }
+        return document;
+    }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                getApplicationContext(),
-                android.R.layout.simple_list_item_1,
-                arrayBook
-        );
+    private void getListBook() {
 
-        listView.setAdapter(adapter);
+        try {
+            Element elementBook = getDocument().getDocumentElement();
+            bookList = elementBook.getElementsByTagName("book");
+            ArrayList arrayBook = new ArrayList();
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                getListChapter(position);
+            for (int i = 0; i < bookList.getLength(); i++) {
+                String book = bookList.item(i).getAttributes().getNamedItem("name").getTextContent();
+                arrayBook.add(book);
             }
-        });
-    }
 
-    private void getListChapter(int book) {
-        Element elementChapter = (Element) bookList.item(book);
-        chapterList = elementChapter.getElementsByTagName("chapter");
-        ArrayList arrayChapter = new ArrayList();
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                    getApplicationContext(),
+                    android.R.layout.simple_list_item_1,
+                    arrayBook
+            );
 
-        for (int i = 0; i < chapterList.getLength(); i++) {
-            String chapter = chapterList.item(i).getAttributes().getNamedItem("number").getTextContent();
-            arrayChapter.add("Capítulo " + chapter);
+            listView.setAdapter(adapter);
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    activityChapters(position);
+                }
+            });
+        } catch (Exception e) {
+            showMSG(e.getMessage());
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                getApplicationContext(),
-                android.R.layout.simple_list_item_1,
-                arrayChapter
-        );
-
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                getListVerse(position);
-            }
-        });
-
     }
 
-    private void getListVerse(int chapter) {
-        Element elementVerse = (Element) chapterList.item(chapter);
-        NodeList verseList = elementVerse.getElementsByTagName("verse");
-        ArrayList arrayVerse = new ArrayList();
-
-        for (int j = 0; j < verseList.getLength(); j++) {
-            Node nodeVerse = verseList.item(j).getChildNodes().item(0);
-            arrayVerse.add(nodeVerse.getNodeValue());
+    protected void activityChapters(int book) {
+        try {
+            // inputStream.close();
+            Intent intent = new Intent(MainActivity.this, ChaptersActivity.class);
+            intent.putExtra("book", book);
+            startActivity(intent);
+        } catch (Exception e) {
+            showMSG(e.getMessage());
         }
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                getApplicationContext(),
-                android.R.layout.simple_list_item_1,
-                arrayVerse
-        );
-
-        listView.setAdapter(adapter);
     }
 
+    private void showMSG(String msg) {
+        try {
+            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            showMSG(e.getMessage());
+        }
+    }
 }
