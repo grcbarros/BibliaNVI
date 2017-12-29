@@ -2,28 +2,20 @@ package com.grcb.biblianvi;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Bible {
     private ListView listView;
     private NodeList bookList;
-    private InputStream inputStream;
-    private Document document;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -33,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
         try {
             listView = findViewById(R.id.listViewId);
 
+            openDocument();
+
             getListBook();
 
         } catch (Exception e) {
@@ -40,22 +34,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private Document getDocument() {
-        try {
-            inputStream = getAssets().open("nvi_min.xml");
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            document = dBuilder.parse(inputStream);
-        } catch (Exception e) {
-            showMSG(e.getMessage());
-        }
-        return document;
-    }
-
     private void getListBook() {
 
         try {
             Element elementBook = getDocument().getDocumentElement();
+
             bookList = elementBook.getElementsByTagName("book");
             ArrayList arrayBook = new ArrayList();
 
@@ -85,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
 
     protected void activityChapters(int book) {
         try {
-            // inputStream.close();
             Intent intent = new Intent(MainActivity.this, ChaptersActivity.class);
             intent.putExtra("book", book);
             startActivity(intent);
@@ -100,5 +82,11 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             showMSG(e.getMessage());
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        closeDocument();
+        super.onBackPressed();
     }
 }

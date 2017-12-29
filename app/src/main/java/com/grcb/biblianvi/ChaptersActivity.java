@@ -1,6 +1,5 @@
 package com.grcb.biblianvi;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -9,40 +8,32 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-public class ChaptersActivity extends Activity {
+public class ChaptersActivity extends MainActivity {
 
     private ListView listView;
-    private InputStream inputStream;
-    private int book;
-    private Document document;
+    private int book, chapter;
     private Element elementChapter;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chapters);
 
         try {
             listView = findViewById(R.id.listViewId);
-            getListChapter(getBook());
+            loadListChapter();
         } catch (Exception e) {
             showMSG(e.getMessage());
         }
 
     }
 
-    private void getListChapter(int book) {
+    private void loadListChapter() {
         try {
             NodeList chapterList = loadBook(book).getElementsByTagName("chapter");
             ArrayList arrayChapter = new ArrayList();
@@ -63,6 +54,7 @@ public class ChaptersActivity extends Activity {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     try {
+                        chapter = position;
                         activityVerses(position);
                     } catch (Exception e) {
                         showMSG(e.getMessage());
@@ -74,6 +66,10 @@ public class ChaptersActivity extends Activity {
         }
     }
 
+    protected int getChapter() {
+        return chapter;
+    }
+
     private Element loadBook(int book) {
         try {
             elementChapter = (Element) getDocument().getElementsByTagName("book").item(book);
@@ -83,20 +79,8 @@ public class ChaptersActivity extends Activity {
         return elementChapter;
     }
 
-    private Document getDocument() {
-        try {
-            inputStream = getAssets().open("nvi_min.xml");
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            document = dBuilder.parse(inputStream);
-        } catch (Exception e) {
-            showMSG(e.getMessage());
-        }
-        return document;
-    }
 
-
-    private int getBook() {
+    protected int getBook() {
         try {
             if (getIntent().hasExtra("book")) {
                 book = getIntent().getIntExtra("book", 0);
@@ -112,7 +96,6 @@ public class ChaptersActivity extends Activity {
 
     private void previousActivity() {
         try {
-            inputStream.close();
             Intent intent = new Intent(ChaptersActivity.this, MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
@@ -125,12 +108,11 @@ public class ChaptersActivity extends Activity {
 
     protected void activityVerses(int chapter) {
         try {
-            inputStream.close();
             Intent intent = new Intent(ChaptersActivity.this, VersesActivity.class);
             intent.putExtra("book", getBook());
             intent.putExtra("chapter", chapter);
             startActivity(intent);
-        } catch (IOException e) {
+        } catch (Exception e) {
             showMSG(e.getMessage());
         }
     }
